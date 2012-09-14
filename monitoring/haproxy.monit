@@ -1,0 +1,4 @@
+check process haproxy with pidfile /var/run/haproxy.pid
+  alert bedis9@gmail.com only on { timeout, nonexist }
+  start program = "/etc/init.d/haproxy start"
+  stop program  = "/etc/init.d/haproxy stop"
