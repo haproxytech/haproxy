@@ -3,7 +3,13 @@
 HA_SRC=/usr/src/haproxy
 DESTDIR=/usr/local/sbin/
 
+if [ ! -d $HA_SRC ];
+then
+	echo "Can't find HAProxy sources: $HA_SRC"
+	exit 1
+fi
+
 cd $HA_SRC/contrib/halog
 make
-cp halog $DESTDIR
+sudo cp halog $DESTDIR
 
