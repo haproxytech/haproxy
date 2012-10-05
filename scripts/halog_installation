@@ -1,0 +1,9 @@
+#!/bin/bash
+
+HA_SRC=/usr/src/haproxy
+DESTDIR=/usr/local/sbin/
+
+cd $HA_SRC/contrib/halog
+make
+cp halog $DESTDIR
+
