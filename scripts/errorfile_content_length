@@ -1,0 +1,12 @@
+#!/bin/bash
+# copyright Exceliance     http://www.exceliance.eu/
+# greetings to premaccess  http://www.premaccess.com/
+
+if [ $# -ne 1 ];
+then
+        echo "please provide the path to the file"
+        exit 1
+fi
+
+tail -n $[ $(wc -l $1 | cut -d ' ' -f 1) - $(egrep -m 1 -n "^$" $1 | cut -d ':' -f 1) ] $1 | wc -c
+
