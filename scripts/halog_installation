@@ -1,4 +1,5 @@
 #!/bin/bash
+# copyright Exceliance     http://www.exceliance.eu/
 
 HA_SRC=/usr/src/haproxy
 DESTDIR=/usr/local/sbin/
