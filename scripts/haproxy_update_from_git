@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Author: Baptiste Assmann <ba@exceliance.fr>
+
+cd /usr/src/haproxy
+git checkout master
+git pull
+make clean
+make TARGET=linux2628 USE_ZLIB=yes USE_OPENSSL=yes USE_PCRE=yes
+sudo make PREFIX=/opt/haproxy install
+
+/etc/init.d/haproxy checkconf
+
