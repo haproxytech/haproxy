@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Author:  Baptiste Assmann <ba@exceliance.fr>
+# Version: 1.0 (2013-02-12)
+
+# update accordingly to your setup
+HALOG=/usr/bin/halog
+
+usage () {
+  echo
+  echo "Sort server by average response time"
+  echo "Usage: ${0##*/} /path/to/haproxy.log"
+  echo
+}
+
+# check haproxy log file argument
+if [ $# -ne 1 ]; then
+  usage
+  exit 1
+fi
+
+# check if haproxy log file exists
+if [ ! -f $1 ]; then
+  echo "$1 File not found"
+  exit 1
+fi
+LOGFILE=$1
+
+# check if halog binary file exists
+if [ ! -x $HALOG ]; then
+  echo "can't find halog: $HALOG"
+  exit 1
+fi
+
+cat $LOGFILE | halog -srv -H -q | awk 'NR==1; NR>1 { print $0 | "sort -k12rn,12"}' | column -t
+
