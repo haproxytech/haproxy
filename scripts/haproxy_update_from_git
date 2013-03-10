@@ -1,12 +1,29 @@
 #!/bin/bash
 
 # Author: Baptiste Assmann <ba@exceliance.fr>
+# version: 1.1
 
-cd /usr/src/haproxy
-git checkout master
-git pull
+if [ ! -d /usr/src/haproxy ]; then
+  cd /usr/src
+  git clone http://git.1wt.eu/git/haproxy.git/
+  cd haproxy
+else
+  cd /usr/src/haproxy
+  git checkout master
+  git pull
+fi
+
 make clean
 make TARGET=linux2628 USE_ZLIB=yes USE_OPENSSL=yes USE_PCRE=yes
+if [ $? -ne 0 ]; then
+  echo "Something went wrong with HAProxy compilation."
+  echo "Please ensure you have the following packages installed:"
+  echo " - libssl-dev"
+  echo " - zlib1g-dev"
+  echo " - libpcre3-dev"
+  exit
+fi
+
 sudo make PREFIX=/opt/haproxy install
 
 /etc/init.d/haproxy checkconf
