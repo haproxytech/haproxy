@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# HAProxy configurator script for Linux
+#
+# Copyright Exceliance
+# v 1.1 - August 16th, 2013
+
+
 help () {
   echo "Usage: ${0##*/} <template name>"
   exit 1
@@ -59,7 +65,7 @@ sed  -i '
 for f in $LIST
 do
   read -p "Value for $f: " -r 
-  sed -i "s/$f/$REPLY/g" $FILENAME
+  sed -i "s~$f~$REPLY~g" $FILENAME
 done
 
 echo "Configuration file is ready: $FILENAME"
