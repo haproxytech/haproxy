@@ -1,0 +1,83 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          haproxy
+# Required-Start:    $local_fs $network
+# Required-Stop:     $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: haproxy initscript
+# Description:       This initscript starts and stops haproxy 1.4.24
+### END INIT INFO
+
+# Author: Guy Francoeur
+# Version: 2014-10-14
+# 1. copy under /etc/init.d
+# 2. chmod 775 /etc/init.d/haproxy
+# 3. update-rc.d haproxy defaults 95 5
+# -. update-rc.d -f haproxy remove
+
+NAME=haproxy
+APP_PATH=/home/haproxy-1.4.24
+CONFIG=/home/haproxy-1.4.24/haproxy.conf
+
+STATUS=`pidof $NAME`
+
+VERSION="-v"
+DAEMON="-D"
+SCRIPTNAME=/etc/init.d/$NAME
+STARTMESG="\nStarting $NAME."
+STOPMSG="\nStopping.. Killing $NAME pid ($STATUS)."
+UPMESG="\n$NAME is running pid ($STATUS)."
+DOWNMESG="\n$NAME is not running."
+
+# Exit if not installed
+[ -x "$APP_PATH/$NAME" ] || exit 0
+[ -f "$CONFIG" ] || exit 0
+
+case "$1" in
+  start)
+    if [ "$STATUS" > 0 ] ; then
+      echo $UPMESG
+    else
+      echo $STARTMESG
+      cd $APP_PATH
+      #screen -d -m $NAME -f $CONFIG
+      # ||
+      ./$NAME -f $CONFIG $DAEMON
+    fi
+    ;;
+  stop)
+    if [ "$STATUS" > 0 ] ; then
+      echo $STOPMSG
+      kill $STATUS
+    else
+      echo $DOWNMESG
+    fi
+    ;;
+  status)
+    if [ "$STATUS" > 0 ] ; then
+      echo $UPMESG
+    else
+      echo $DOWNMESG
+    fi
+    ;;
+  restart)
+    if [ "$STATUS" > 0 ] ; then
+      echo $STOPMSG
+      kill $STATUS
+    fi
+    echo $STARTMESG
+    cd $APP_PATH
+    ./$NAME -f $CONFIG $DAEMON
+    ;;
+  version)
+    cd $APP_PATH
+    ./$NAME $VERSION
+    ;;
+  *)
+    echo "Usage: $SCRIPTNAME {start|status|restart|stop|version}" >&2
+    exit 3
+    ;;
+esac
+:
