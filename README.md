@@ -1,7 +1,5 @@
 haproxy
 =======
 
-HAProxy related stuff: scripts, configs, etc...
-
-http://www.exceliance.fr/en/
+HAProxy related stuff: scripts, configs, etc... provided by HAProxy Technologies: http://www.haproxy.com/
 
