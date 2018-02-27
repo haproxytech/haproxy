@@ -1,0 +1,62 @@
+global
+  daemon
+  pidfile /tmp/haproxy.pid
+  stats socket /tmp/haproxy.sock level admin
+  maxconn 2000
+  log 10.42.0.1:514 local0 info
+  server-state-file /tmp/haproxy.serverstates
+  description HAProxy / consul demo
+
+resolvers consul
+  nameserver consul consul_haproxy_1.docker:8600
+  accepted_payload_size 8192
+
+defaults
+  log global
+  option httplog
+  option socket-stats
+  load-server-state-from-file global
+  default-server init-addr none inter 1s rise 2 fall 2
+  mode http
+  
+  timeout client 30s
+  timeout connect 4s
+  timeout http-keep-alive 10s
+  timeout http-request 5s
+  timeout server 30s
+
+frontend http-in
+  bind *:8000
+  maxconn 2000
+  use_backend b_%[req.hdr(Host),lower,word(1,:)]
+
+
+backend b_api.consul.itchy.local
+  server-template api 10 _api._tcp.service.consul resolvers consul resolve-prefer ipv4 check
+
+backend b_consul.consul.itchy.local
+  server-template consul 1 _consul._tcp.service.consul resolvers consul resolve-prefer ipv4 check
+
+backend b_consul-dashboard.consul.itchy.local
+  server-template consul-dashboard 10 _consul-dashboard._tcp.service.consul resolvers consul resolve-prefer ipv4 check
+
+backend b_haproxystats.consul.itchy.local
+  server-template haproxystats 1 _haproxystats._tcp.service.consul resolvers consul resolve-prefer ipv4 check
+
+backend b_new.consul.itchy.local
+  server-template new 10 _new._tcp.service.consul resolvers consul resolve-prefer ipv4 check
+
+backend b_www.consul.itchy.local
+  server-template www 10 _www._tcp.service.consul resolvers consul resolve-prefer ipv4 check
+
+
+frontend stats
+  bind *:1936
+  mode http
+  option forceclose
+  stats enable
+  stats uri /
+  stats show-legends
+  stats show-desc
+  stats show-node
+  stats refresh 2

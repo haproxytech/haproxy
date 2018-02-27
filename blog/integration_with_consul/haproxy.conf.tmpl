@@ -1,0 +1,44 @@
+global
+  daemon
+#  debug
+  pidfile /haproxy.pid
+  stats socket /haproxy.sock level admin
+  maxconn {{key "service/haproxy/maxconn"}}
+  log 10.42.0.1:514 local0 info
+  server-state-file /haproxy.serverstates
+  description HAProxy / consul demo
+
+resolvers consul
+  nameserver consul 127.0.0.1:8600
+  accepted_payload_size 8192
+
+defaults
+  log global
+  option httplog
+  option socket-stats
+  load-server-state-from-file global
+  default-server init-addr none inter 1s rise 2 fall 2
+  mode {{key "service/haproxy/mode"}}
+  {{range ls "service/haproxy/timeouts"}}
+  timeout {{.Key}} {{.Value}}{{end}}
+
+frontend http-in
+  bind *:80
+  maxconn {{key "service/haproxy/maxconn"}}
+  use_backend b_%[req.hdr(Host),lower,word(1,:)]
+
+{{range services}}{{$servicename := .Name}}{{$nbsrvkeyname := printf "service/haproxy/backend/%s/nbsrv" $servicename}}
+backend b_{{$servicename}}.{{key "service/haproxy/domainname"}}
+  server-template {{$servicename}} {{keyOrDefault $nbsrvkeyname "10"}} _{{$servicename}}._tcp.service.consul resolvers consul resolve-prefer ipv4 check
+{{end}}
+
+frontend stats
+  bind *:1936
+  mode http
+  option forceclose
+  stats enable
+  stats uri /
+  stats show-legends
+  stats show-desc
+  stats show-node
+  stats refresh 2
