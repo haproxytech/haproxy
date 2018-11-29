@@ -1,0 +1,7 @@
+.vagrant/
+errors/
+bin/
+obj/
+node_modules/
+*-cloudimg-console.log
+haproxy.cfg.dpkg-new
