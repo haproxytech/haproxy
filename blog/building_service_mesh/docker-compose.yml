@@ -1,0 +1,42 @@
+version: "3"
+services:
+
+  consul-server:
+    image: consul:1.4.0
+    environment:
+      CONSUL_LOCAL_CONFIG: '{ "connect": { "enabled": true }}'
+    command: ["agent", "-ui", "-client=0.0.0.0", "-bind=0.0.0.0", "-data-dir=/consul/data", "-server", "-bootstrap-expect=1", "-config-dir=/etc/consul.d" ]
+    volumes:
+    - ./consul-server/consul.d:/etc/consul.d
+    ports:
+    - "8500:8500"
+
+  www:
+    image: haproxytech/consulproxy
+    build:
+      context: ./www
+      args:
+        CONSUL_VER: "1.4.0"
+    environment:
+      SERVICENAME: www
+      REDIS_URL: localhost
+      CONSUL_HTTP_TOKEN: agenttoken
+    ports:
+    - "21002:21002"
+    - "1936:1936"
+    depends_on:
+    - consul-server
+
+  redis:
+    image: haproxytech/redis
+    build:
+      context: ./redis
+      args:
+        CONSUL_VER: "1.4.0"
+    environment:
+      SERVICENAME: redis
+      CONSUL_HTTP_TOKEN: agenttoken
+    ports:
+    - "1937:1936"
+    depends_on:
+    - consul-server

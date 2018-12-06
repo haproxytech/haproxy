@@ -1,0 +1,13 @@
+{
+  "dns_config": {
+    "enable_truncate": true,
+    "udp_answer_limit": 100
+  },
+  "connect": {
+    "enabled": true
+  },
+  "acl_datacenter":"dc1",
+  "acl_default_policy":"deny",
+  "acl_down_policy":"extend-cache",
+  "acl_master_token":"mastertoken"
+}
