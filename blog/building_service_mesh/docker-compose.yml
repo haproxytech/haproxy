@@ -1,0 +1,34 @@
+version: "3"
+services:
+
+  consul-server:
+    image: consul
+    environment:
+      CONSUL_LOCAL_CONFIG: '{ "connect": { "enabled": true }}'
+    command: ["agent", "-ui", "-client=0.0.0.0", "-bind=0.0.0.0", "-data-dir=/consul/data", "-server", "-bootstrap-expect=1"]
+    ports:
+    - "8500:8500"
+
+  sample:
+    image: haproxytech/consulproxy
+    build:
+      context: ./sample
+      args:
+        CONSUL_VER: "1.4.0"
+    environment:
+      SERVICENAME: mywebapp
+      REDIS_URL: redis
+    ports:
+    - "21002:21002"
+    - "1936:1936"
+
+  redis:
+    image: haproxytech/redis
+    build:
+      context: ./redis
+      args:
+        CONSUL_VER: "1.4.0"
+    environment:
+      SERVICENAME: redis
+    ports:
+    - "1937:1936"

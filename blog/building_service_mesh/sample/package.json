@@ -1,0 +1,15 @@
+{
+    "name": "sample",
+    "version": "1.0.0",
+    "description": "Sample application using Consul service mesh and HAProxy",
+    "main": "app.js",
+    "scripts": {
+        "start": "node app.js"
+    },
+    "author": "HAProxy Technologies",
+    "license": "ISC",
+    "dependencies": {
+        "express": "^4.16.4",
+        "redis": "^2.8.0"
+    }
+}

@@ -61,8 +61,8 @@ The start.sh script introduce above is also very important, since it configures 
 
 An example of such script is included in the repo too.
 It embeds configuration for a sidecar which:
-* expose the 'www' local application on the external network
-* expose a remote 'redis' service on the loopback, to be consumed by the local 'www' service
+* expose the 'sample' local application on the external network
+* expose a remote 'redis' service on the loopback, to be consumed by the local 'sample' service
 
 Usage
 =====

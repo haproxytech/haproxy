@@ -69,7 +69,6 @@ CONSUL_SERVICE_URL="http://localhost:8500/v1/agent/service/${ARGS["SIDECAR_FOR"]
 CONSUL_ROOTCA_URL="http://localhost:8500/v1/agent/connect/ca/roots"
 CONSUL_LEAF_CERT_URL="http://localhost:8500/v1/agent/connect/ca/leaf"
 
-
 # this function triggers a reload of HAProxy
 function do-reload() {
 	pidof ${HAP_BINARY_NAME}
@@ -120,7 +119,7 @@ function check-certs() {
 	do
 		CONSUL_LEAFCERT_JSON=$(${CURL} ${CONSUL_LEAF_CERT_URL}/${CERTNAME} 2>>$LOGFILE)
 		SERIAL=$(jq -r .SerialNumber <<<${CONSUL_LEAFCERT_JSON})
-		if [ "${CERTS[$cert]}" != "$SERIAL" ]; then
+		if [ "${CERTS[$cert]}" != "$SERIAL" ] || [ ! -s "${CONF_PROD_DIR}/${CONF_CERTS_DIRNAME}/${cert}.pem" ]; then
 			save-leaf-cert $cert ${CONF_PROD_DIR}/${CONF_CERTS_DIRNAME}
 			ret+=1
 		fi
@@ -194,7 +193,7 @@ function config-getdata() {
 #fi
 	UNSECURED_BIND_PORT=$(jq -r .Proxy.Config.unsecured_bind_port <<<${CONSUL_PROXY_JSON})
 	if [ "${UNSECURED_BIND_PORT}" != "null" ]; then
-		CONFIG["UNSECURED_BIND_PORT"]="bind ${CONFIG["BIND_ADDRESS"]}:${UNSECURED_BIND_PORT} name unsecured"
+		CONFIG["UNSECURED_BIND_PORT"]="bind :${UNSECURED_BIND_PORT} name unsecured"
 		CONFIG["ACL_UNSECURED"]="${CONFIG["ACL_UNSECURED"]} ${UNSECURED_BIND_PORT}"
 	fi
 
@@ -274,7 +273,7 @@ frontend f_stats
 
 # Proxied (local) service
 frontend f_${CONFIG["TARGET_SERVICE_NAME"]}
- bind ${CONFIG["BIND_ADDRESS"]}:${CONFIG["BIND_PORT"]} ssl ca-file ca.pem crt ${CONFIG["TARGET_SERVICE_NAME"]}.pem verify required name secured
+ bind :${CONFIG["BIND_PORT"]} ssl ca-file ca.pem crt ${CONFIG["TARGET_SERVICE_NAME"]}.pem verify required name secured
  ${CONFIG["AUTHORIZATIONFREE_BIND_PORT"]}
  ${CONFIG["UNSECURED_BIND_PORT"]}
  ${CONFIG["ACL_UNSECURED"]}
@@ -326,8 +325,15 @@ function upstream-getdata() {
 		UPSTREAM["DESTINATION_SERVERS"]="server-template s_${UPSTREAM["DESTINATION_NAME"]} 20 _${UPSTREAM["DESTINATION_NAME"]}._tcp.service.consul ssl resolvers consul ca-file ca.pem crt ${CONFIG["TARGET_SERVICE_NAME"]}.pem check #no-tls-tickets"
 		;;
 		"connect")
-		# FIXME: use SRV records and remove the LOCAL_BIND_PORT dirty hack
-		UPSTREAM["DESTINATION_SERVERS"]="server-template s_${UPSTREAM["DESTINATION_NAME"]} 20 ${UPSTREAM["DESTINATION_NAME"]}.connect.consul:${UPSTREAM["LOCAL_BIND_PORT"]} ssl resolvers consul ca-file ca.pem crt ${CONFIG["TARGET_SERVICE_NAME"]}.pem check #no-tls-tickets"
+		# FIXME: use SRV records instead of catalog API
+		CONSUL_CATALOG_URL="http://localhost:8500/v1/catalog/service/${UPSTREAM["DESTINATION_NAME"]}-sidecar-proxy"
+		CATALOG_UPSTREAM_JSON=$($CURL ${CONSUL_CATALOG_URL} 2>>$LOGFILE)
+
+		for row in $(jq -c .[] <<<${CATALOG_UPSTREAM_JSON})
+		do
+			UPSTREAM["SERVICE_PORT"]=$(jq -r .ServicePort <<<${row})
+		    UPSTREAM["DESTINATION_SERVERS"]="server-template s_${UPSTREAM["DESTINATION_NAME"]} 20 ${UPSTREAM["DESTINATION_NAME"]}.connect.consul:${UPSTREAM["SERVICE_PORT"]} ssl resolvers consul ca-file ca.pem crt ${CONFIG["TARGET_SERVICE_NAME"]}.pem check #no-tls-tickets"
+		done
 		;;
 	esac
 
@@ -393,13 +399,13 @@ function generate-cfg() {
 
 	ERROR="false"
 	echo "" >>$LOGFILE
-
+echo "DEBUG: Checking Conf dir"
 	[ -z "${CONF_TMP_DIR}" ] && return 1
 	rm -rf  ${CONF_TMP_DIR}
 	mkdir -p ${CONF_TMP_DIR}
 	mkdir -p ${CONFIG["CERTS_FOLDER"]}
 
-
+echo "DEBUG: Saving leaf cert"
 	# get cert and key for target service
 	save-leaf-cert ${CONFIG["TARGET_SERVICE_NAME"]} ${CONF_TMP_DIR}/${CONF_CERTS_DIRNAME}
 

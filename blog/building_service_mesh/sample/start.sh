@@ -3,8 +3,9 @@
 set -e
 set -x
 
-cd www
-node www &
+cd /www
+npm install
+npm start &
 
 MYIP=$(hostname -i)
 
@@ -14,23 +15,10 @@ cat <<EOF >/etc/consul.d/services.json
 {
   "service": {
     "name": "${SERVICENAME}",
-    "port": 3000,
+    "port": 8080,
     "address": "${MYIP}",
     "connect": {
       "sidecar_service": {
-        "port": 8000,
-        "address": "${MYIP}",
-        "checks": [
-          {
-            "Name": "Connect Sidecar Listening",
-            "TCP": "${MYIP}:8000",
-            "Interval": "10s"
-          },
-          {
-            "Name": "Connect Sidecar Aliasing ${SERVICENAME}",
-            "alias_service": "${SERVICENAME}"
-          }
-        ],
         "proxy": {
           "upstreams": [
             {
@@ -41,15 +29,14 @@ cat <<EOF >/etc/consul.d/services.json
             }
           ],
           "config": {
-            "unsecured_bind_port": 8002,
-            "local_service_mode": "http",
-            "syslog_server": "consulconnect_syslog_1:514"
+            "unsecured_bind_port": 21002,
+            "local_service_mode": "http"
           }
         }
       }
     }
   },
-  "acl_datacenter":"dc1",
+  "primary_datacenter":"dc1",
   "acl_default_policy":"deny",
   "acl_down_policy":"extend-cache",
   "acl_token":"agenttoken"
@@ -62,5 +49,5 @@ cat /etc/consul.d/services.json
 
 exec su -l nobody -s /bin/bash -c "consul agent -data-dir=/tmp/consul -node=$HOSTNAME -node-id=$(uuidgen) -bind=0.0.0.0 \
                 -enable-script-checks \
-                -config-dir=/etc/consul.d -retry-join consulconnect_consul-server_1"
+                -config-dir=/etc/consul.d -retry-join consul-server"
 

@@ -62,7 +62,7 @@ core.register_action("authorize", { "http-req", "tcp-req" }, function(txn)
 
   -- this is due to a 'second' call, need to troubleshoot why
   -- this function is called twice in TCP mode
-  if type(serial) == 'nil' or type(der) == 'nil' then
+  if type(der) == 'nil' then
     txn.set_var(txn, "txn.SpiffeUrl", "-")
     txn.set_var(txn, "txn.Authorized", "false")
     txn.set_var(txn, "txn.Reason", "Error parsing client certificate")
@@ -70,12 +70,14 @@ core.register_action("authorize", { "http-req", "tcp-req" }, function(txn)
   end
 
   -- collecting client cert spiffe URL and client certificate serial
+
   local mycert = x509.new(der, "DER")
   if mycert ~= nil then
     local myext = mycert:getExtension('X509v3 Subject Alternative Name')
     client_cert_url = string.gsub(myext:text(), 'URI:', '')
     txn.set_var(txn, "txn.SpiffeUrl", client_cert_url)
   end
+
   serial = txn.c:hex(serial)
 
   if not hasExpired(client_cert_url) then
@@ -88,23 +90,22 @@ core.register_action("authorize", { "http-req", "tcp-req" }, function(txn)
   -- update the target to remove the 'f_' prefix
   target = string.sub(target, 3)
   request_body = json.encode({ Target = target, ClientCertURI = client_cert_url, ClientCertSerial = serial })
+  print("DEBUG: " .. request_body)
   headers['Content-Type'] = 'application/json'
   headers['Content-Length'] = #request_body
 
   local b, c, h = http.request {
     url = "http://127.0.0.1:8500/v1/agent/connect/authorize",
-    create = core.tcp,
+    --create = core.tcp,
     method = "POST",
     headers = headers,
     source = ltn12.source.string(request_body),
     sink = ltn12.sink.table(response_body)
   }
 
-
   -- analyze the feedback from consul connect
   if c == nil or c ~= 200 then
     setCache(client_cert_url, "false", "Not authorized by consul")
-
     txn.set_var(txn, "txn.Authorized", "false")
     txn.set_var(txn, "txn.Reason", 'Not authorized by consul')
     return
