@@ -90,7 +90,6 @@ core.register_action("authorize", { "http-req", "tcp-req" }, function(txn)
   -- update the target to remove the 'f_' prefix
   target = string.sub(target, 3)
   request_body = json.encode({ Target = target, ClientCertURI = client_cert_url, ClientCertSerial = serial })
-  print("DEBUG: " .. request_body)
   headers['Content-Type'] = 'application/json'
   headers['Content-Length'] = #request_body
 

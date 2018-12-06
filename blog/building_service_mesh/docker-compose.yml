@@ -9,14 +9,14 @@ services:
     ports:
     - "8500:8500"
 
-  sample:
+  www:
     image: haproxytech/consulproxy
     build:
-      context: ./sample
+      context: ./www
       args:
         CONSUL_VER: "1.4.0"
     environment:
-      SERVICENAME: mywebapp
+      SERVICENAME: www
       REDIS_URL: redis
     ports:
     - "21002:21002"

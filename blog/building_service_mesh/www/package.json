@@ -1,5 +1,5 @@
 {
-    "name": "sample",
+    "name": "www",
     "version": "1.0.0",
     "description": "Sample application using Consul service mesh and HAProxy",
     "main": "app.js",
