@@ -400,13 +400,11 @@ function generate-cfg() {
 
 	ERROR="false"
 	echo "" >>$LOGFILE
-echo "DEBUG: Checking Conf dir"
 	[ -z "${CONF_TMP_DIR}" ] && return 1
 	rm -rf  ${CONF_TMP_DIR}
 	mkdir -p ${CONF_TMP_DIR}
 	mkdir -p ${CONFIG["CERTS_FOLDER"]}
 
-echo "DEBUG: Saving leaf cert"
 	# get cert and key for target service
 	save-leaf-cert ${CONFIG["TARGET_SERVICE_NAME"]} ${CONF_TMP_DIR}/${CONF_CERTS_DIRNAME}
 
