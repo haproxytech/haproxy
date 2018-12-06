@@ -212,11 +212,11 @@ function config-getdata() {
 	esac
 	CONFIG["LOCAL_SERVICE_MODE"]="${CONFIG["LOCAL_SERVICE_MODE"]}
  tcp-request inspect-delay 30s
- #tcp-request content lua.authorize unless UNSECURED
- #tcp-request content capture var(txn.SpiffeUrl) len 64 if { var(txn.SpiffeUrl) -m found }
- #tcp-request content capture var(txn.Authorized) len 64 if { var(txn.Authorized) -m found }
- #tcp-request content capture var(txn.Reason) len 64 if { var(txn.Reason) -m found }
- tcp-request content reject #unless UNSECURED or { var(txn.Authorized) -m str true }
+ tcp-request content lua.authorize unless UNSECURED
+ tcp-request content capture var(txn.SpiffeUrl) len 64 if { var(txn.SpiffeUrl) -m found }
+ tcp-request content capture var(txn.Authorized) len 64 if { var(txn.Authorized) -m found }
+ tcp-request content capture var(txn.Reason) len 64 if { var(txn.Reason) -m found }
+ tcp-request content reject unless UNSECURED or { var(txn.Authorized) -m str true }
 "
 	SYSLOG_SERVER=$(jq -r .Proxy.Config.syslog_server <<<${CONSUL_PROXY_JSON})
 	if [ "${SYSLOG_SERVER}" != "null" ]; then
