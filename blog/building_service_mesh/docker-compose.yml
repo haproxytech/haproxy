@@ -17,7 +17,7 @@ services:
         CONSUL_VER: "1.4.0"
     environment:
       SERVICENAME: www
-      REDIS_URL: redis
+      REDIS_URL: localhost
     ports:
     - "21002:21002"
     - "1936:1936"

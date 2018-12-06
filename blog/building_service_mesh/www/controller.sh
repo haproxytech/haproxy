@@ -216,7 +216,8 @@ function config-getdata() {
  tcp-request content capture var(txn.SpiffeUrl) len 64 if { var(txn.SpiffeUrl) -m found }
  tcp-request content capture var(txn.Authorized) len 64 if { var(txn.Authorized) -m found }
  tcp-request content capture var(txn.Reason) len 64 if { var(txn.Reason) -m found }
- tcp-request content reject unless UNSECURED or { var(txn.Authorized) -m str true }
+ tcp-request content accept if UNSECURED or LOCALHOST or { var(txn.Authorized) -m str true }
+ tcp-request content reject
 "
 	SYSLOG_SERVER=$(jq -r .Proxy.Config.syslog_server <<<${CONSUL_PROXY_JSON})
 	if [ "${SYSLOG_SERVER}" != "null" ]; then
@@ -251,10 +252,10 @@ resolvers consul
 
 defaults
  timeout client 30s
- timeout connect 250ms
+ timeout connect 1s
  timeout server 30s
  option  redispatch 1
- retries 3
+ retries 10
  option socket-stats
  option tcplog
  option dontlognull
