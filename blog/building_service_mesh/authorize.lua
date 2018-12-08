@@ -93,7 +93,7 @@ core.register_action("authorize", { "http-req", "tcp-req" }, function(txn)
 
   local b, c, h = http.request {
     url = "http://127.0.0.1:8500/v1/agent/connect/authorize",
-    create = core.tcp,
+    --create = core.tcp,
     method = "POST",
     headers = headers,
     source = ltn12.source.string(request_body),
