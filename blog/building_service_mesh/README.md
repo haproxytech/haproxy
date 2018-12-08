@@ -64,6 +64,20 @@ It embeds configuration for a sidecar which:
 * expose the 'www' local application on the external network
 * expose a remote 'redis' service on the loopback, to be consumed by the local 'www' service
 
+Docker-compose usage
+====================
+
+Run the following commands in that order:
+```
+docker-compose up -d consul-server
+sleep 10
+docker-compose exec consul-server curl --request PUT --header "X-Consul-Token: mastertoken" --data '{ "ID": "agenttoken", "Name": "Agent Token", "Type": "client", "Rules": "node \"\" { policy = \"write\" } service \"\" { policy = \"write\" }" }' http://localhost:8500/v1/acl/create
+sleep 1
+docker-compose up -d www redis
+```
+
+By default, the ACL will deny the traffic. In order to allow 'www' to contact 'redis', you must create the relevant intention in consul-server UI.
+
 Usage
 =====
 
