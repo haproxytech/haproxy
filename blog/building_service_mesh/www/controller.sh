@@ -219,8 +219,7 @@ function config-getdata() {
  tcp-request content capture var(txn.SpiffeUrl) len 64 if { var(txn.SpiffeUrl) -m found }
  tcp-request content capture var(txn.Authorized) len 64 if { var(txn.Authorized) -m found }
  tcp-request content capture var(txn.Reason) len 64 if { var(txn.Reason) -m found }
- tcp-request content accept if UNSECURED or LOCALHOST or { var(txn.Authorized) -m str true }
- tcp-request content reject
+ tcp-request content reject unless UNSECURED or { var(txn.Authorized) -m str true }
 "
 	SYSLOG_SERVER=$(jq -r .Proxy.Config.syslog_server <<<${CONSUL_PROXY_JSON})
 	if [ "${SYSLOG_SERVER}" != "null" ]; then
